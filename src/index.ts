@@ -10,7 +10,7 @@ async function main() {
   console.log('Session created:', tmux.toString())
 
   // Demo: send input
-  const output = await tmux.inputToAgent('hello')
+  const output = await tmux.inputToAgent('write "ttt" into test.md')
   console.log('Output:', output)
 
   // Cleanup

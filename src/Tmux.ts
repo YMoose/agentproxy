@@ -72,7 +72,7 @@ export class Tmux {
   }
 
   // Capture output: go backward until we meet >, collect lines along the way(now only for normal output)
-  private async captureOutput(): Promise<string> {
+  async captureOutput(output_type: number = 0): Promise<string> {
     const output = await this.tmux(`capture-pane -t ${this.target} -p -J`)
     const lines = output.split('\n')
     const result: string[] = []
@@ -94,6 +94,7 @@ export class Tmux {
 
     for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i]
+      console.log("test ", i, ": ", line)
       if (isPrompt(line)) {
         if (isInputBox === 0) {
           break
@@ -108,7 +109,7 @@ export class Tmux {
         }
       }
 
-      if (isInputBox === 0) {
+      if (isInputBox === 0 || output_type === 2) {
         result.unshift(line)
       }
     }
