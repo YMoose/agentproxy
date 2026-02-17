@@ -117,6 +117,7 @@ POST /input
 Content-Type: application/json
 
 {
+  "name": "tmux name",
   "type": "input",
   "text": "your message here"
 }
@@ -127,6 +128,7 @@ POST /input
 Content-Type: application/json
 
 {
+  "name": "tmux name",
   "type": "choice",
   "choice": "3",
   "text": "your message here"

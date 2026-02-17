@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { InputRequest, InputResponse, DialogRequest, DialogResponse, StopRequest, StopResponse, NewSessionRequest, NewSessionResponse, ReleaseSessionRequest, ReleaseSessionResponse } from './httpTypes'
 import { sessionManager } from './SessionManager'
-import { AgentState, AgentType } from './types'
+import { AgentType } from './types'
 
 const app = new Hono()
 
