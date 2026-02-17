@@ -74,30 +74,33 @@ tmux send-keys -t 0_home-agentproxy:0 "hello"     # Send feedback text
 tmux send-keys -t 0_home-agentproxy:0 Enter       # Submit
 ```
 
-### return capture output
+## http api
 
-every time the agent state trans to wait_input should triggle the capture of the output of the input or interactive. the triggle method is using the hook mechanism. 
+### start a tmux session
 
-the output content is between prompts using prompt markers.
+```
+POST /new
+Content-Type: application/json
 
-```bash
-# 1. Save last prompt line number BEFORE sending input
-LAST_PROMPT=$(tmux capture-pane -t 0_home-agentproxy:0 -p -J | grep -n '❯' | tail -1 | cut -d: -f1)
-
-# 2. Send input
-tmux send-keys -t 0_home-agentproxy:0 "your input"
-tmux send-keys -t 0_home-agentproxy:0 Enter
-
-# 3. Wait for response, then get new prompt line number
-NEW_PROMPT=$(tmux capture-pane -t 0_home-agentproxy:0 -p -J | grep -n '❯' | tail -1 | cut -d: -f1)
-
-# 4. Capture output between prompts
-tmux capture-pane -t 0_home-agentproxy:0 -p -J | sed -n "${LAST_PROMPT},${NEW_PROMPT}p"
+{
+  "type": "claude",
+  "path": "user path"
+}
 ```
 
-**Note**: `-J` flag unwraps lines, handling wrapped text properly.
+and response the name of the tmux
 
-## http api
+### kill a tmux session 
+```
+POST /release
+Content-Type: application/json
+
+{
+  "name": "tmux name"
+}
+```
+
+### outcoming edge of state wait_input
 
 **Available Types:**
 | Type | Description |
@@ -116,5 +119,41 @@ Content-Type: application/json
 {
   "type": "input",
   "text": "your message here"
+}
+```
+
+```
+POST /input
+Content-Type: application/json
+
+{
+  "type": "choice",
+  "choice": "3",
+  "text": "your message here"
+}
+```
+
+### incoming edge of state wait_input
+
+#### claude 
+
+use [hook](https://code.claude.com/docs/en/hooks) to triggle output capture
+
+- `PermissionRequest`
+```
+POST /dialog_appears
+Content-Type: application/json
+
+{
+  "name": "tmux name",
+}
+```
+- `Stop`
+```
+POST /stop
+Content-Type: application/json
+
+{
+  "name": "tmux name",
 }
 ```

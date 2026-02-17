@@ -1,20 +1,17 @@
-import { Tmux } from './Tmux'
-import { AgentType } from './types'
+import { serve } from '@hono/node-server'
+import { app } from './server'
+
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000
 
 async function main() {
-  const tmux = new Tmux(0, process.cwd(), AgentType.CLAUDE)
-
-  console.log('Initializing tmux session...')
-  await tmux.init()
-
-  console.log('Session created:', tmux.toString())
-
-  // Demo: send input
-  const output = await tmux.inputToAgent('write "ttt" into test.md')
-  console.log('Output:', output)
-
-  // Cleanup
-  await tmux.release()
+  // Start HTTP server
+  console.log(`Starting HTTP server on port ${PORT}...`)
+  serve({
+    fetch: app.fetch,
+    port: PORT
+  }, (info) => {
+    console.log(`Server running at http://localhost:${info.port}`)
+  })
 }
 
 main().catch(console.error)
