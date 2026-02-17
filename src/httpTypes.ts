@@ -31,6 +31,12 @@ export interface InputRequest {
   name?: string      // session name (optional, uses default if not provided)
 }
 
+export interface InputResponse {
+  success: boolean
+  output?: string
+  error?: string
+}
+
 export interface DialogRequest {
   name: string       // tmux session name
 }

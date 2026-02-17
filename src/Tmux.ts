@@ -1,7 +1,7 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { Agent } from './Agent'
-import { AgentType } from './types'
+import { AgentType, AgentState } from './types'
 
 const execAsync = promisify(exec)
 
@@ -11,6 +11,7 @@ export class Tmux {
   id: number
   agent: Agent
   createTime: Date
+  private stateResolver: (() => void) | null = null
 
   constructor(id: number, path: string, agentType: AgentType) {
     this.id = id
@@ -46,13 +47,35 @@ export class Tmux {
     return `${this.name}:0`
   }
 
+  // Wait for state to become WAIT_INPUT
+  private async waitForWaitInput(): Promise<void> {
+    if (this.agent.state === AgentState.WAIT_INPUT) {
+      return
+    }
+    return new Promise((resolve) => {
+      this.stateResolver = resolve
+    })
+  }
+
+  // Called by /stop hook to signal execution complete
+  notifyWaiting(): void {
+    this.agent.state = AgentState.WAIT_INPUT
+    if (this.stateResolver) {
+      this.stateResolver()
+      this.stateResolver = null
+    }
+  }
+
   // Send input to agent
   async inputToAgent(text: string): Promise<string> {
     await this.tmux(`send-keys -t ${this.target} "${text}"`)
     await new Promise(resolve => setTimeout(resolve, 1000))
     await this.tmux(`send-keys -t ${this.target} Enter`)
 
-    await new Promise(resolve => setTimeout(resolve, 15000))
+    // Set state to EXECUTE and wait for WAIT_INPUT
+    this.agent.state = AgentState.EXECUTE
+    await this.waitForWaitInput()
+
     return await this.captureOutput()
   }
 
@@ -67,8 +90,11 @@ export class Tmux {
       await this.tmux(`send-keys -t ${this.target} "${choice}"`)
     }
 
-    await new Promise(resolve => setTimeout(resolve, 15000))
-    return await this.captureOutput()
+    // Set state to EXECUTE and wait for WAIT_INPUT
+    this.agent.state = AgentState.INTERACTIVE
+    await this.waitForWaitInput()
+
+    return await this.captureOutput(2)
   }
 
   // Capture output: go backward until we meet >, collect lines along the way(now only for normal output)
