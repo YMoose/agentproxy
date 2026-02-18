@@ -155,7 +155,7 @@ app.post('/dialog_appears', async (c) => {
     }
 
     // Notify that interactive is complete (sets state to WAIT_INPUT and resolves the promise)
-    tmux.notifyWaiting()
+    tmux.notifyWaiting(2)
 
     console.log(`[Hook] Dialog appeared in session: ${name}`)
     return c.json<DialogResponse>({ success: true })
@@ -182,7 +182,7 @@ app.post('/stop', async (c) => {
     }
 
     // Notify that execution is complete (sets state to WAIT_INPUT and resolves the promise)
-    tmux.notifyWaiting()
+    tmux.notifyWaiting(1)
 
     console.log(`[Hook] Agent stopped in session: ${name}`)
     return c.json<StopResponse>({ success: true })

@@ -88,9 +88,16 @@ Content-Type: application/json
 }
 ```
 
+**curl example:**
+```bash
+curl -X POST http://localhost:3000/new \
+  -H "Content-Type: application/json" \
+  -d '{"type": "claude", "path": "/home/user/myproject"}'
+```
+
 and response the name of the tmux
 
-### kill a tmux session 
+### kill a tmux session
 ```
 POST /release
 Content-Type: application/json
@@ -98,6 +105,14 @@ Content-Type: application/json
 {
   "name": "tmux name"
 }
+```
+
+**curl example:**
+```bash
+# Using session name directly
+curl -X POST http://localhost:3000/release \
+  -H "Content-Type: application/json" \
+  -d '{"name": "0_-home-user-myproject"}'
 ```
 
 ### outcoming edge of state wait_input
@@ -135,6 +150,13 @@ Content-Type: application/json
 }
 ```
 
+**curl example:**
+```bash
+curl -X POST http://localhost:3000/input \
+  -H "Content-Type: application/json" \
+  -d "{\"name\": \"0_-home-user-myproject\", \"type\": \"input\", \"text\": \"your message here\"}"
+```
+
 ### incoming edge of state wait_input
 
 #### claude 
@@ -147,15 +169,30 @@ POST /dialog_appears
 Content-Type: application/json
 
 {
-  "name": "tmux name",
+  "name": "tmux name"
 }
 ```
+
+**curl example:**
+```bash
+curl -X POST http://localhost:3000/dialog_appears \
+  -H "Content-Type: application/json" \
+  -d "{\"name\": \"$(tmux display-message -p '#S')\"}"
+```
+
 - `Stop`
 ```
 POST /stop
 Content-Type: application/json
 
 {
-  "name": "tmux name",
+  "name": "tmux name"
 }
+```
+
+**curl example:**
+```bash
+curl -X POST http://localhost:3000/stop \
+  -H "Content-Type: application/json" \
+  -d "{\"name\": \"$(tmux display-message -p '#S')\"}"
 ```

@@ -11,7 +11,7 @@ export class Tmux {
   id: number
   agent: Agent
   createTime: Date
-  private stateResolver: (() => void) | null = null
+  private stateResolver: ((value: number) => void) | null = null
 
   constructor(id: number, path: string, agentType: AgentType) {
     this.id = id
@@ -48,9 +48,9 @@ export class Tmux {
   }
 
   // Wait for state to become WAIT_INPUT
-  private async waitForWaitInput(): Promise<void> {
+  private async waitForWaitInput(): Promise<number> {
     if (this.agent.state === AgentState.WAIT_INPUT) {
-      return
+      return 0
     }
     return new Promise((resolve) => {
       this.stateResolver = resolve
@@ -58,10 +58,10 @@ export class Tmux {
   }
 
   // Called by /stop hook to signal execution complete
-  notifyWaiting(): void {
+  notifyWaiting(value: number): void {
     this.agent.state = AgentState.WAIT_INPUT
     if (this.stateResolver) {
-      this.stateResolver()
+      this.stateResolver(value)
       this.stateResolver = null
     }
   }
@@ -74,9 +74,12 @@ export class Tmux {
 
     // Set state to EXECUTE and wait for WAIT_INPUT
     this.agent.state = AgentState.EXECUTE
-    await this.waitForWaitInput()
+    const outputType = await this.waitForWaitInput()
 
-    return await this.captureOutput()
+    if (outputType === 0) {
+      return "failed to set state"
+    }
+    return await this.captureOutput(outputType)
   }
 
   // Interactive with agent (choices)
@@ -92,13 +95,16 @@ export class Tmux {
 
     // Set state to EXECUTE and wait for WAIT_INPUT
     this.agent.state = AgentState.INTERACTIVE
-    await this.waitForWaitInput()
+    const outputType = await this.waitForWaitInput()
 
-    return await this.captureOutput(2)
+    if (outputType === 0) {
+      return "failed to set state"
+    }
+    return await this.captureOutput(outputType)
   }
 
   // Capture output: go backward until we meet >, collect lines along the way(now only for normal output)
-  async captureOutput(output_type: number = 0): Promise<string> {
+  async captureOutput(output_type: number): Promise<string> {
     const output = await this.tmux(`capture-pane -t ${this.target} -p -J`)
     const lines = output.split('\n')
     const result: string[] = []
@@ -120,7 +126,7 @@ export class Tmux {
 
     for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i]
-      console.log("test ", i, ": ", line)
+      // console.log("test ", i, ": ", line)
       if (isPrompt(line)) {
         if (isInputBox === 0) {
           break
@@ -134,8 +140,9 @@ export class Tmux {
           continue
         }
       }
-
+      
       if (isInputBox === 0 || output_type === 2) {
+        console.log("type ", output_type, "should output :", line)
         result.unshift(line)
       }
     }
