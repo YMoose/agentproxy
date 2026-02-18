@@ -34,6 +34,9 @@ export class Tmux {
       await this.tmux(`new-session -d -s ${this.name} -c ${this.path}`)
       await this.tmux(`send-keys -t ${this.target} "${this.agent.type}"`)
       await this.tmux(`send-keys -t ${this.target} Enter`)
+      // might be a new place for agent, use enter to trust
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      await this.tmux(`send-keys -t ${this.target} Enter`)
     }
   }
 
@@ -142,7 +145,7 @@ export class Tmux {
       }
       
       if (isInputBox === 0 || output_type === 2) {
-        console.log("type ", output_type, "should output :", line)
+        // console.log("type ", output_type, "should output :", line)
         result.unshift(line)
       }
     }

@@ -31,10 +31,10 @@ app.post('/new', async (c) => {
 
     // todo: valid path
 
-    const name = await sessionManager.createSession(path, type)
-    console.log(`[Session] Created session: ${name}`)
+    const id = await sessionManager.createSession(path, type)
+    console.log(`[Session] Created session with id: ${id}`)
 
-    return c.json<NewSessionResponse>({ success: true, name })
+    return c.json<NewSessionResponse>({ success: true, id })
   } catch (error) {
     return c.json<NewSessionResponse>({
       success: false,
@@ -47,24 +47,24 @@ app.post('/new', async (c) => {
 app.post('/release', async (c) => {
   try {
     const body = await c.req.json<ReleaseSessionRequest>()
-    const { name } = body
+    const { id } = body
 
-    if (!name) {
+    if (id === undefined) {
       return c.json<ReleaseSessionResponse>({
         success: false,
-        error: 'Missing required field: name'
+        error: 'Missing required field: id'
       }, 400)
     }
 
-    const removed = await sessionManager.removeSession(name)
+    const removed = await sessionManager.removeSession(id)
     if (!removed) {
       return c.json<ReleaseSessionResponse>({
         success: false,
-        error: `Session '${name}' not found`
+        error: `Session '${id}' not found`
       }, 404)
     }
 
-    console.log(`[Session] Released session: ${name}`)
+    console.log(`[Session] Released session: ${id}`)
     return c.json<ReleaseSessionResponse>({ success: true })
   } catch (error) {
     return c.json<ReleaseSessionResponse>({
@@ -78,20 +78,20 @@ app.post('/release', async (c) => {
 app.post('/input', async (c) => {
   try {
     const body = await c.req.json<InputRequest>()
-    const { type, text, choice, name } = body
+    const { type, text, choice, id } = body
 
-    if (!name) {
+    if (id === undefined) {
       return c.json<InputResponse>({
         success: false,
-        error: 'Missing required field: name'
+        error: 'Missing required field: id'
       }, 400)
     }
 
-    const tmux = sessionManager.getSession(name)
+    const tmux = sessionManager.getSession(id)
     if (!tmux) {
       return c.json<InputResponse>({
         success: false,
-        error: `Session '${name}' not found`
+        error: `Session '${id}' not found`
       }, 404)
     }
 
@@ -146,7 +146,16 @@ app.post('/dialog_appears', async (c) => {
     const body = await c.req.json<DialogRequest>()
     const { name } = body
 
-    const tmux = sessionManager.getSession(name)
+    // Extract id from name (format: N_xxx)
+    const id = parseInt(name.split('_')[0])
+    if (isNaN(id)) {
+      return c.json<DialogResponse>({
+        success: false,
+        error: `Invalid session name format: ${name}`
+      }, 400)
+    }
+
+    const tmux = sessionManager.getSession(id)
     if (!tmux) {
       return c.json<DialogResponse>({
         success: false,
@@ -173,7 +182,16 @@ app.post('/stop', async (c) => {
     const body = await c.req.json<StopRequest>()
     const { name } = body
 
-    const tmux = sessionManager.getSession(name)
+    // Extract id from name (format: N_xxx)
+    const id = parseInt(name.split('_')[0])
+    if (isNaN(id)) {
+      return c.json<StopResponse>({
+        success: false,
+        error: `Invalid session name format: ${name}`
+      }, 400)
+    }
+
+    const tmux = sessionManager.getSession(id)
     if (!tmux) {
       return c.json<StopResponse>({
         success: false,

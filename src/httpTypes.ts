@@ -11,12 +11,12 @@ export interface NewSessionRequest {
 
 export interface NewSessionResponse {
   success: boolean
-  name?: string
+  id?: number
   error?: string
 }
 
 export interface ReleaseSessionRequest {
-  name: string
+  id: number
 }
 
 export interface ReleaseSessionResponse {
@@ -28,7 +28,7 @@ export interface InputRequest {
   type: InputType
   text?: string      // for 'input' and 'choice' types
   choice?: string    // for 'choice' type (1, 2, 3, etc.)
-  name?: string      // session name (optional, uses default if not provided)
+  id?: number        // session id (optional, uses default if not provided)
 }
 
 export interface InputResponse {
